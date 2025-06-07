@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import HeatMap from "@uiw/react-heat-map";
 
-// Function to generate random activity
+// Generate activity data between two dates
 const generateActivityData = (startDate, endDate) => {
   const data = [];
   let currentDate = new Date(startDate);
@@ -10,8 +10,8 @@ const generateActivityData = (startDate, endDate) => {
   while (currentDate <= end) {
     const count = Math.floor(Math.random() * 50);
     data.push({
-      date: currentDate.toISOString().split("T")[0], //YYY-MM-DD
-      count: count,
+      date: currentDate.toISOString().split("T")[0], // Format: YYYY-MM-DD
+      count,
     });
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -19,13 +19,13 @@ const generateActivityData = (startDate, endDate) => {
   return data;
 };
 
+// Dynamic green-based heatmap colors
 const getPanelColors = (maxCount) => {
   const colors = {};
   for (let i = 0; i <= maxCount; i++) {
-    const greenValue = Math.floor((i / maxCount) * 255);
-    colors[i] = `rgb(0, ${greenValue}, 0)`;
+    const green = Math.floor((i / maxCount) * 200) + 50;
+    colors[i] = `rgb(0, ${green}, 0)`;
   }
-
   return colors;
 };
 
@@ -34,34 +34,30 @@ const HeatMapProfile = () => {
   const [panelColors, setPanelColors] = useState({});
 
   useEffect(() => {
-    const fetchData = async () => {
-      const startDate = "2001-01-01";
-      const endDate = "2001-01-31";
-      const data = generateActivityData(startDate, endDate);
-      setActivityData(data);
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 90); // Last 90 days
 
-      const maxCount = Math.max(...data.map((d) => d.count));
-      setPanelColors(getPanelColors(maxCount));
-    };
+    const data = generateActivityData(startDate, endDate);
+    setActivityData(data);
 
-    fetchData();
+    const maxCount = Math.max(...data.map((d) => d.count), 1); // Avoid 0
+    setPanelColors(getPanelColors(maxCount));
   }, []);
 
   return (
-    <div>
-      <h4>Recent Contributions</h4>
+    <div style={{ padding: "1rem", color: "white" }}>
+      <h3 style={{ marginBottom: "1rem" }}>Recent Contributions</h3>
       <HeatMap
-        className="HeatMapProfile"
-        style={{ maxWidth: "700px", height: "200px", color: "white" }}
         value={activityData}
-        weekLabels={["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]}
-        startDate={new Date("2001-01-01")}
+        startDate={new Date(activityData[0]?.date)}
         rectSize={15}
         space={3}
-        rectProps={{
-          rx: 2.5,
-        }}
+        weekLabels={["S", "M", "T", "W", "T", "F", "S"]}
+        monthLabels={["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]}
+        rectProps={{ rx: 2.5 }}
         panelColors={panelColors}
+        tooltip={(d) => `${d.date} - ${d.count} activities`}
       />
     </div>
   );
